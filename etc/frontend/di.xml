@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Genome\Payment\Api\Data\TokenInterface" type="Genome\Payment\Model\Token"/>
+    <preference for="Genome\Payment\Api\TokenRepositoryInterface" type="Genome\Payment\Model\TokenRepository"/>
+    <preference for="Genome\Payment\Api\Data\TokenSearchResultsInterface" type="Genome\Payment\Model\TokenSearchResults" />
+    <type name="Magento\Checkout\Model\CompositeConfigProvider">
+        <arguments>
+            <argument name="configProviders" xsi:type="array">
+                <item name="genome" xsi:type="object">Genome\Payment\Model\Checkout\GenomeConfigProvider
+                </item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Genome\Payment\Controller\Iframe\Callback">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">Genome\Payment\Gateway\Command\CommandPool</argument>
+            <argument name="logger" xsi:type="object">Genome\Payment\Model\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Vault\Model\Ui\TokensConfigProvider">
+        <arguments>
+            <argument name="tokenUiComponentProviders" xsi:type="array">
+                <item name="genome" xsi:type="object">Genome\Payment\Model\Ui\TokenUiComponentProvider</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Genome\Payment\ViewModel\AbstractIframe">
+        <arguments>
+            <argument name="logger" xsi:type="object">Genome\Payment\Model\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Genome\Payment\Controller\Pay\Online">
+        <arguments>
+            <argument name="logger" xsi:type="object">Genome\Payment\Model\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Genome\Payment\Gateway\Helper\PayHelper">
+        <arguments>
+            <argument name="logger" xsi:type="object">Genome\Payment\Model\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Genome\Payment\ViewModel\SessionIframe">
+        <arguments>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Genome\Payment\Controller\Iframe\Index">
+        <arguments>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+</config>

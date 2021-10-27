@@ -1,0 +1,218 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Genome\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Genome\Payment\Gateway\Config\Config::CODE</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="Genome\Payment\Model\GenomeAdapter" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">Genome\Payment\Gateway\Config\Config::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Magento\Payment\Block\Info</argument>
+            <argument name="valueHandlerPool" xsi:type="object">Genome\Payment\Gateway\Config\ValueHandlerPool
+            </argument>
+            <argument name="commandPool" xsi:type="object">Genome\Payment\Gateway\Command\CommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Genome\Payment\Gateway\Config\ValueHandlerPool"
+                 type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">Genome\Payment\Gateway\Config\ConfigValueHandler</item>
+                <item name="can_authorize" xsi:type="string">Genome\Payment\Gateway\Config\CanAuthorizeValueHandler</item>
+                <item name="payment_action" xsi:type="string">Genome\Payment\Gateway\Config\PaymentActionValueHandler
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Genome\Payment\Gateway\Config\ConfigValueHandler"
+                 type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">Genome\Payment\Gateway\Config\Config</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Genome\Payment\Gateway\Command\CommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="callback" xsi:type="string">Genome\Payment\Gateway\Command\CallbackCommand</item>
+                <item name="refund" xsi:type="string">Genome\Payment\Gateway\Command\GenomeRefund</item>
+                <item name="vault_authorize" xsi:type="string">Genome\Payment\Gateway\Command\VaultSaleCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Genome Logger -->
+    <type name="Genome\Payment\Model\Logger\Handler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <virtualType name="Genome\Payment\Model\Logger\Logger" type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="name" xsi:type="string">genomeLogger</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">Genome\Payment\Model\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- END Genome Logger -->
+
+    <!-- Configuration for Genome Vault -->
+    <virtualType name="Genome\Payment\Model\GenomeCreditCardVault" type="Magento\Vault\Model\Method\Vault">
+        <arguments>
+            <argument name="config" xsi:type="object">GenomeVaultPaymentConfig</argument>
+            <argument name="valueHandlerPool" xsi:type="object">Genome\Payment\Gateway\Config\VaultValueHandlerPool
+            </argument>
+            <argument name="vaultProvider" xsi:type="object">Genome\Payment\Model\GenomeAdapter</argument>
+            <argument name="code" xsi:type="const">Genome\Payment\Gateway\Config\Config::CC_VAULT_CODE</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="GenomeVaultPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">
+                Genome\Payment\Gateway\Config\Config::CC_VAULT_CODE
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Genome\Payment\Gateway\Config\VaultValueHandlerPool" type="VaultPaymentValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">Genome\Payment\Gateway\Config\VaultConfigValueHandler
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Genome\Payment\Gateway\Config\VaultConfigValueHandler"
+                 type="VaultPaymentDefaultValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">GenomeVaultPaymentConfig
+            </argument>
+        </arguments>
+    </virtualType>
+    <!-- END Configuration for Genome Vault -->
+
+    <!-- Command managers section for Vault -->
+    <virtualType name="Genome\Payment\Gateway\Command\CommandManager"
+                 type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">Genome\Payment\Gateway\Command\CommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Magento\Payment\Gateway\Command\CommandManagerPool">
+        <arguments>
+            <argument name="executors" xsi:type="array">
+                <item name="genome" xsi:type="string">Genome\Payment\Gateway\Command\CommandManager</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- END command managers section for Vault -->
+
+    <!-- Genome Handlers -->
+    <virtualType name="Genome\Payment\Gateway\Response\CallbackHandlers"
+                 type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="vault_details" xsi:type="string">Genome\Payment\Gateway\Response\VaultDetailsHandler</item>
+                <item name="payment_details" xsi:type="string">Genome\Payment\Gateway\Response\PayHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Genome\Payment\Gateway\Response\VaultPurchaseHandlers"
+                 type="Magento\Payment\Gateway\Response\HandlerChain">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="vault_purchase" xsi:type="string">Genome\Payment\Gateway\Response\VaultPurchaseHandler
+                </item>
+                <item name="card_details" xsi:type="string">
+                    Genome\Payment\Gateway\Response\VaultCardDetailsHandler
+                </item>
+                <item name="transaction_close" xsi:type="string">
+                    Genome\Payment\Gateway\Response\TransactionCloseHandler
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+
+    <type name="Genome\Payment\Gateway\Response\VaultDetailsHandler">
+        <arguments>
+            <argument name="logger" xsi:type="object">Genome\Payment\Model\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <!-- END Genome Handlers -->
+
+    <!-- Genome Callback Command -->
+    <virtualType name="Genome\Payment\Gateway\Command\CallbackCommand"
+                 type="Genome\Payment\Gateway\Command\GenomeCommand">
+        <arguments>
+            <argument name="handler" xsi:type="object">Genome\Payment\Gateway\Response\CallbackHandlers</argument>
+            <argument name="validator" xsi:type="object">Genome\Payment\Gateway\Validator\CallbackValidator
+            </argument>
+            <argument name="logger" xsi:type="object">Genome\Payment\Model\Logger\Logger</argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="Genome\Payment\Gateway\Validator\CallbackValidator"
+                 type="Magento\Payment\Gateway\Validator\ValidatorComposite">
+        <arguments>
+            <argument name="validators" xsi:type="array">
+                <item name="checksum_validator" xsi:type="string">
+                    Genome\Payment\Gateway\Validator\ChecksumResponseValidator
+                </item>
+                <item name="order_status_validator" xsi:type="string">
+                    Genome\Payment\Gateway\Validator\OrderStatusResponseValidator
+                </item>
+                <item name="order_currency_validator" xsi:type="string">
+                    Genome\Payment\Gateway\Validator\OrderCurrencyResponseValidator
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Genome\Payment\Gateway\Validator\ChecksumResponseValidator">
+        <arguments>
+            <argument name="logger" xsi:type="object">Genome\Payment\Model\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <!-- END Genome Callback Command -->
+
+    <!-- Genome Refund command -->
+    <virtualType name="Genome\Payment\Gateway\Command\GenomeRefund" type="Genome\Payment\Gateway\Command\RefundCommand">
+        <arguments>
+            <argument name="handler" xsi:type="object">Genome\Payment\Gateway\Response\RefundHandler</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Genome\Payment\Gateway\Response\RefundHandler">
+        <arguments>
+            <argument name="logger" xsi:type="object">Genome\Payment\Model\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <!-- END Genome Refund command -->
+
+    <!-- Genome Vault Sale command -->
+    <virtualType name="Genome\Payment\Gateway\Command\VaultSaleCommand"
+                 type="Genome\Payment\Gateway\Command\GenomeCommand">
+        <arguments>
+            <argument name="handler" xsi:type="object">Genome\Payment\Gateway\Response\VaultPurchaseHandlers</argument>
+        </arguments>
+    </virtualType>
+    <!-- END Genome Vault Sale command -->
+
+    <type name="Genome\Payment\Gateway\Response\VaultPurchaseHandler">
+        <arguments>
+            <argument name="logger" xsi:type="object">Genome\Payment\Model\Logger\Logger</argument>
+        </arguments>
+    </type>
+</config>
